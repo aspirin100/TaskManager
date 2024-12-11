@@ -2,12 +2,14 @@ package main
 
 import (
 	"encoding/json"
+	"flag"
 	"log"
 	"net/http"
 	"os"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/spf13/viper"
 )
 
 type Task struct {
@@ -26,14 +28,33 @@ type CreateTaskResponse struct {
 	Error  *string `json:"error,omitempty"`
 }
 
+var configPath string
+
+func init() {
+	flag.StringVar(&configPath, "config-path", "./configs", "path to the config file")
+}
+
+func InitConfig() {
+	viper.AddConfigPath(configPath)
+	viper.SetConfigName("config")
+
+	if err := viper.ReadInConfig(); err != nil {
+		viper.SetDefault("port", 8080)
+	}
+}
+
 func main() {
+
+	flag.Parse()
 
 	var buf []byte
 	task_buf := Task{}
 	task_response := CreateTaskResponse{}
 	var id uuid.UUID
 
-	http.HandleFunc("POST /tasks", func(w http.ResponseWriter, r *http.Request) {
+	InitConfig()
+
+	http.HandleFunc("POST /task", func(w http.ResponseWriter, r *http.Request) {
 
 		err := json.NewDecoder(r.Body).Decode(&task_buf)
 		if err != nil {
@@ -58,7 +79,7 @@ func main() {
 		w.Write(buf)
 	})
 
-	http.HandleFunc("GET /tasks", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("GET /task", func(w http.ResponseWriter, r *http.Request) {
 		if task_buf.ID == 0 {
 			w.Write([]byte("don't have any tasks"))
 		} else {
@@ -71,7 +92,7 @@ func main() {
 		}
 	})
 
-	http.HandleFunc("PATCH /tasks", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("PATCH /task", func(w http.ResponseWriter, r *http.Request) {
 
 	})
 
