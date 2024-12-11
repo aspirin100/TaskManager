@@ -28,19 +28,25 @@ type CreateTaskResponse struct {
 	Error  *string `json:"error,omitempty"`
 }
 
-var configPath string
+var Config = struct {
+	BindAddr   string
+	ConfigPath string
+}{}
 
 func init() {
-	flag.StringVar(&configPath, "config-path", "./configs", "path to the config file")
+	flag.StringVar(&Config.ConfigPath, "config-path", "./configs", "path to the config file")
 }
 
 func InitConfig() {
-	viper.AddConfigPath(configPath)
+	viper.AddConfigPath(Config.ConfigPath)
 	viper.SetConfigName("config")
 
 	if err := viper.ReadInConfig(); err != nil {
-		viper.SetDefault("port", 8080)
+		viper.SetDefault("bindaddr", ":8080")
+		log.Print(err.Error())
 	}
+
+	Config.BindAddr = viper.GetString("bindaddr")
 }
 
 func main() {
@@ -96,7 +102,7 @@ func main() {
 
 	})
 
-	err := http.ListenAndServe(":8080", nil)
+	err := http.ListenAndServe(Config.BindAddr, nil)
 	if err != nil {
 		println("ListenAndServe error")
 		os.Exit(1)
