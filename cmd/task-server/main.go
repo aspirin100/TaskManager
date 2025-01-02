@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/kelseyhightower/envconfig"
 	_ "github.com/lib/pq"
 
 	"github.com/aspirin100/TaskMaster/migrations"
@@ -14,7 +15,15 @@ import (
 )
 
 func main() {
-	db, err := sql.Open("postgres", "postgres://postgres:postgres@localhost:5432/auth?sslmode=disable")
+
+	config := Config{}
+
+	err := envconfig.Process("task-server", &config)
+	if err != nil {
+		log.Fatal("configuration error")
+	}
+
+	db, err := sql.Open("postgres", config.PostgresDSN)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
@@ -28,7 +37,7 @@ func main() {
 
 	log.Println("migrations up")
 
-	err = http.ListenAndServe(":8000", nil)
+	err = http.ListenAndServe(config.Hostname, nil)
 	if err != nil {
 		println("ListenAndServe error")
 		os.Exit(1)
