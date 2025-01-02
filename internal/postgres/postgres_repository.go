@@ -59,6 +59,17 @@ func (pg *PostgresRepo) InsertNewTask(ctx context.Context, params InsertTaskPara
 	return taskID, nil
 }
 
+func (pg *PostgresRepo) DeleteTask(ctx context.Context, taskID uuid.UUID) error {
+
+	_, err := pg.DB.QueryContext(ctx, DeleteTaskQuery, taskID)
+	if err != nil {
+		return fmt.Errorf("delete task query error: %w", err)
+	}
+
+	return nil
+}
+
 const (
 	InsertTaskQuery = `insert into tasks(taskID, userID, type, name, description, status) values ($1, $2, $3, $4, $5, $6)`
+	DeleteTaskQuery = `delete from tasks where taskID = $1`
 )

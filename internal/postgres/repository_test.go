@@ -56,3 +56,21 @@ func TestInsertNewTask(t *testing.T) {
 		t.Fail()
 	}
 }
+
+func TestDeleteTask(t *testing.T) {
+	db, err := sql.Open("postgres", "postgres://postgres:postgres@localhost:5432/task-manager?sslmode=disable")
+	if err != nil {
+		log.Println(err)
+		t.Fail()
+	}
+
+	rp := postgres.PostgresRepo{
+		DB: db,
+	}
+
+	err = rp.DeleteTask(context.Background(), uuid.MustParse("f182607f-6b8f-45a9-ad47-b6d38013c827"))
+	if err != nil {
+		log.Println(err)
+		t.Fail()
+	}
+}
