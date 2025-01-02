@@ -1,4 +1,4 @@
-package handle
+package taskUsecase
 
 import (
 	"context"
@@ -7,7 +7,7 @@ import (
 	"github.com/google/uuid"
 )
 
-type handler interface {
+type usecaseHandler interface {
 	CreateTask(ctx context.Context, req CreateTaskRequest) (CreateTaskResponse, error)
 	GetTask(ctx context.Context, req GetTaskRequest) (tasks.Task, error)
 	UpdateTask(ctx context.Context, req UpdateTaskRequest) (UpdateTaskResponse, error)

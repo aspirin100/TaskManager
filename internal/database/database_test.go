@@ -1,4 +1,4 @@
-package postgres_test
+package database_test
 
 import (
 	"context"
@@ -6,7 +6,7 @@ import (
 	"log"
 	"testing"
 
-	"github.com/aspirin100/TaskManager/internal/postgres"
+	"github.com/aspirin100/TaskManager/internal/database"
 	"github.com/google/uuid"
 )
 
@@ -17,11 +17,11 @@ func TestInsertNewTaskFail(t *testing.T) {
 		t.Fail()
 	}
 
-	rp := postgres.PostgresRepo{
+	rp := database.PostgresRepo{
 		DB: db,
 	}
 
-	params := postgres.InsertTaskParams{
+	params := database.InsertTaskParams{
 		Description: "test description",
 		Status:      1,
 	}
@@ -40,11 +40,11 @@ func TestInsertNewTask(t *testing.T) {
 		t.Fail()
 	}
 
-	rp := postgres.PostgresRepo{
+	rp := database.PostgresRepo{
 		DB: db,
 	}
 
-	params := postgres.InsertTaskParams{
+	params := database.InsertTaskParams{
 		UserID:      uuid.MustParse("e05fa11d-eec3-4fba-b223-d6516800a047"),
 		Description: "test description",
 		Status:      1,
@@ -64,7 +64,7 @@ func TestDeleteTask(t *testing.T) {
 		t.Fail()
 	}
 
-	rp := postgres.PostgresRepo{
+	rp := database.PostgresRepo{
 		DB: db,
 	}
 

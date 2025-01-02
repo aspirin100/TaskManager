@@ -7,8 +7,8 @@ import (
 
 	"github.com/kelseyhightower/envconfig"
 
-	handle "github.com/aspirin100/TaskManager/internal/api"
-	"github.com/aspirin100/TaskManager/internal/postgres"
+	"github.com/aspirin100/TaskManager/internal/database"
+	"github.com/aspirin100/TaskManager/internal/usecase"
 )
 
 type Config struct {
@@ -36,14 +36,14 @@ func main() {
 	logger := setupLogger(config.Environment)
 	logger.Debug("logger setuped", slog.String("env", config.Environment))
 
-	db, err := postgres.UpDatabase("postgres", config.PostgresDSN)
+	db, err := database.UpDatabase("postgres", config.PostgresDSN)
 	if err != nil {
 		logger.Error(err.Error())
 		os.Exit(1)
 	}
 
-	handler := handle.Handler{
-		DBRepo: postgres.PostgresRepo{
+	handler := taskUsecase.UsecaseHandler{
+		DBRepo: database.PostgresRepo{
 			DB: db,
 		},
 	}
