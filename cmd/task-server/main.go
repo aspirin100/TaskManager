@@ -7,8 +7,8 @@ import (
 
 	"github.com/kelseyhightower/envconfig"
 
-	handle "github.com/aspirin100/TaskMaster/internal/api"
-	"github.com/aspirin100/TaskMaster/internal/postgres"
+	handle "github.com/aspirin100/TaskManager/internal/api"
+	"github.com/aspirin100/TaskManager/internal/postgres"
 )
 
 type Config struct {

@@ -1,4 +1,4 @@
-module github.com/aspirin100/TaskMaster
+module github.com/aspirin100/TaskManager
 
 go 1.23.3
 

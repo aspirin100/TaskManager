@@ -6,7 +6,7 @@ import (
 	"log"
 	"testing"
 
-	"github.com/aspirin100/TaskMaster/internal/postgres"
+	"github.com/aspirin100/TaskManager/internal/postgres"
 	"github.com/google/uuid"
 )
 

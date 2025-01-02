@@ -3,7 +3,7 @@ package handle
 import (
 	"context"
 
-	"github.com/aspirin100/TaskMaster/internal/tasks"
+	"github.com/aspirin100/TaskManager/internal/tasks"
 	"github.com/google/uuid"
 )
 

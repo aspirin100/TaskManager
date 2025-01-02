@@ -7,7 +7,7 @@ import (
 
 	_ "github.com/lib/pq"
 
-	"github.com/aspirin100/TaskMaster/migrations"
+	"github.com/aspirin100/TaskManager/migrations"
 
 	"github.com/google/uuid"
 	"github.com/pressly/goose/v3"
