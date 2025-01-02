@@ -11,7 +11,7 @@ import (
 )
 
 type Config struct {
-	PostgresDSN string `envconfig:"TASK_SERVER_POSTGRES_DSN" default:"postgres://postgres:postgres@localhost:5432/auth?sslmode=disable"` //nolint:lll
+	PostgresDSN string `envconfig:"TASK_SERVER_POSTGRES_DSN" default:"postgres://postgres:postgres@localhost:5432/task-manager?sslmode=disable"` //nolint:lll
 	Hostname    string `envconfig:"TASK_SERVER_HOSTNAME" default:":8000"`
 	Environment string `envconfig:"TASK_SERVER_ENV" default:"local"`
 }
