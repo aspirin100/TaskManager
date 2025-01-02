@@ -7,6 +7,7 @@ import (
 
 	"github.com/kelseyhightower/envconfig"
 
+	handle "github.com/aspirin100/TaskMaster/internal/api"
 	"github.com/aspirin100/TaskMaster/internal/postgres"
 )
 
@@ -35,11 +36,18 @@ func main() {
 	logger := setupLogger(config.Environment)
 	logger.Debug("logger setuped", slog.String("env", config.Environment))
 
-	err = postgres.UpDatabase("postgres", config.PostgresDSN)
+	db, err := postgres.UpDatabase("postgres", config.PostgresDSN)
 	if err != nil {
 		logger.Error(err.Error())
 		os.Exit(1)
 	}
+
+	handler := handle.Handler{
+		DBRepo: postgres.PostgresRepo{
+			DB: db,
+		},
+	}
+	_ = handler
 
 	err = http.ListenAndServe(config.Hostname, nil)
 	if err != nil {

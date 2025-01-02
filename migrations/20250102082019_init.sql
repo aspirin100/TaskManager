@@ -2,7 +2,7 @@
 -- +goose StatementBegin
 create table if not exists tasks
 (
-    taskID serial primary key,
+    taskID uuid primary key not null,
     userID uuid not null,
     type text,
     name text,
