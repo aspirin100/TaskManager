@@ -1,17 +1,25 @@
 package main
 
 import (
-	"database/sql"
-	"log"
+	"log/slog"
 	"net/http"
 	"os"
 
 	"github.com/kelseyhightower/envconfig"
-	_ "github.com/lib/pq"
 
-	"github.com/aspirin100/TaskMaster/migrations"
+	"github.com/aspirin100/TaskMaster/internal/postgres"
+)
 
-	"github.com/pressly/goose/v3"
+type Config struct {
+	PostgresDSN string `envconfig:"TASK_SERVER_POSTGRES_DSN" default:"postgres://postgres:postgres@localhost:5432/auth?sslmode=disable"` //nolint:lll
+	Hostname    string `envconfig:"TASK_SERVER_HOSTNAME" default:":8000"`
+	Environment string `envconfig:"TASK_SERVER_ENV" default:"local"`
+}
+
+const (
+	envLocal = "local"
+	envProd  = "prod"
+	envDev   = "dev"
 )
 
 func main() {
@@ -20,32 +28,44 @@ func main() {
 
 	err := envconfig.Process("task-server", &config)
 	if err != nil {
-		log.Fatal("configuration error")
+		println("configuration reading error")
+		os.Exit(1)
 	}
 
-	db, err := sql.Open("postgres", config.PostgresDSN)
+	logger := setupLogger(config.Environment)
+	logger.Debug("logger setuped", slog.String("env", config.Environment))
+
+	err = postgres.UpDatabase("postgres", config.PostgresDSN)
 	if err != nil {
-		log.Fatal(err.Error())
+		logger.Error(err.Error())
+		os.Exit(1)
 	}
-
-	goose.SetBaseFS(migrations.Migrations)
-
-	err = goose.Up(db, ".")
-	if err != nil {
-		log.Fatal(err.Error())
-	}
-
-	log.Println("migrations up")
 
 	err = http.ListenAndServe(config.Hostname, nil)
 	if err != nil {
-		println("ListenAndServe error")
+		logger.Error(err.Error())
 		os.Exit(1)
 	}
 
 }
 
-type Config struct {
-	PostgresDSN string `envconfig:"TASK_SERVER_POSTGRES_DSN" default:"postgres://postgres:postgres@localhost:5432/auth?sslmode=disable"` //nolint:lll
-	Hostname    string `envconfig:"TASK_SERVER_HOSTNAME" default:":8000"`
+func setupLogger(env string) *slog.Logger {
+	var logger *slog.Logger
+
+	switch env {
+	case envLocal:
+		logger = slog.New(
+			slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug}),
+		)
+	case envDev:
+		logger = slog.New(
+			slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug}),
+		)
+	case envProd:
+		logger = slog.New(
+			slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo}),
+		)
+	}
+
+	return logger
 }

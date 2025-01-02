@@ -3,6 +3,8 @@ package handle
 import (
 	"net/http"
 	"time"
+
+	"github.com/aspirin100/TaskMaster/internal/postgres"
 )
 
 type handler interface {
@@ -13,6 +15,7 @@ type handler interface {
 }
 
 type Handler struct {
+	dbRepo postgres.PostgresRepo
 }
 
 type Task struct {
