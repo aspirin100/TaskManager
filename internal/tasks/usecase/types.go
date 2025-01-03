@@ -1,4 +1,4 @@
-package taskUsecase
+package tasksUsecase
 
 import (
 	"context"

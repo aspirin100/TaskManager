@@ -10,8 +10,8 @@ import (
 	"github.com/kelseyhightower/envconfig"
 
 	"github.com/aspirin100/TaskManager/internal/api/server/middleware/logger"
-	tasks_repo "github.com/aspirin100/TaskManager/internal/repository"
-	taskUsecase "github.com/aspirin100/TaskManager/internal/usecase"
+	tasksRepository "github.com/aspirin100/TaskManager/internal/tasks/repository"
+	tasksUsecase "github.com/aspirin100/TaskManager/internal/tasks/usecase"
 )
 
 type Config struct {
@@ -38,14 +38,14 @@ func main() {
 	logg := setupLogger(config.Environment)
 	logg.Debug("logger setuped", slog.String("env", config.Environment))
 
-	db, err := tasks_repo.UpDatabase("postgres", config.PostgresDSN)
+	db, err := tasksRepository.UpDatabase("postgres", config.PostgresDSN)
 	if err != nil {
 		logg.Error(err.Error())
 		os.Exit(1)
 	}
 
-	handler := taskUsecase.UsecaseHandler{
-		DBRepo: tasks_repo.PostgresRepo{
+	handler := tasksUsecase.UsecaseHandler{
+		DBRepo: tasksRepository.PostgresRepo{
 			DB: db,
 		},
 	}
@@ -53,8 +53,10 @@ func main() {
 
 	router := chi.NewRouter()
 
-	router.Use(middleware.RequestID)
 	router.Use(logger.New(logg))
+	router.Use(middleware.RequestID)
+	router.Use(middleware.Recoverer)
+	router.Use(middleware.URLFormat)
 
 	err = http.ListenAndServe(config.Hostname, nil)
 	if err != nil {

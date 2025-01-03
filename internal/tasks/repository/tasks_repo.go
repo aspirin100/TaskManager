@@ -1,4 +1,4 @@
-package tasks_repo
+package tasksRepository
 
 import (
 	"context"
