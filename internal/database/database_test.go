@@ -7,18 +7,30 @@ import (
 	"testing"
 
 	"github.com/aspirin100/TaskManager/internal/database"
+
+	"github.com/davecgh/go-spew/spew"
 	"github.com/google/uuid"
 )
 
-func TestInsertNewTaskFail(t *testing.T) {
+func OpenDb() (database.PostgresRepo, error) {
 	db, err := sql.Open("postgres", "postgres://postgres:postgres@localhost:5432/task-manager?sslmode=disable")
 	if err != nil {
-		log.Println(err)
-		t.Fail()
+		return database.PostgresRepo{}, err
 	}
 
 	rp := database.PostgresRepo{
 		DB: db,
+	}
+
+	return rp, nil
+}
+
+func TestInsertNewTaskFail(t *testing.T) {
+
+	rp, err := OpenDb()
+	if err != nil {
+		log.Println(err)
+		t.Fail()
 	}
 
 	params := database.InsertTaskParams{
@@ -34,14 +46,10 @@ func TestInsertNewTaskFail(t *testing.T) {
 }
 
 func TestInsertNewTask(t *testing.T) {
-	db, err := sql.Open("postgres", "postgres://postgres:postgres@localhost:5432/task-manager?sslmode=disable")
+	rp, err := OpenDb()
 	if err != nil {
 		log.Println(err)
 		t.Fail()
-	}
-
-	rp := database.PostgresRepo{
-		DB: db,
 	}
 
 	params := database.InsertTaskParams{
@@ -58,19 +66,51 @@ func TestInsertNewTask(t *testing.T) {
 }
 
 func TestDeleteTask(t *testing.T) {
-	db, err := sql.Open("postgres", "postgres://postgres:postgres@localhost:5432/task-manager?sslmode=disable")
+	rp, err := OpenDb()
 	if err != nil {
 		log.Println(err)
 		t.Fail()
 	}
 
-	rp := database.PostgresRepo{
-		DB: db,
-	}
-
-	err = rp.DeleteTask(context.Background(), uuid.MustParse("f182607f-6b8f-45a9-ad47-b6d38013c827"))
+	err = rp.DeleteTask(context.Background(), uuid.MustParse("c436ce0a-7bf8-420a-8ea2-ca798689f14e"))
 	if err != nil {
 		log.Println(err)
 		t.Fail()
 	}
+}
+
+func TestUpdateTask(t *testing.T) {
+	rp, err := OpenDb()
+	if err != nil {
+		log.Println(err)
+		t.Fail()
+	}
+	params := database.UpdateTaskParams{
+		TaskID:      uuid.MustParse("da405c59-bdf5-4483-9ce1-0187ebfd16a7"),
+		Name:        "test name",
+		Description: "updated description",
+		Status:      3,
+	}
+
+	_, err = rp.UpdateTask(context.Background(), params)
+	if err != nil {
+		log.Println(err)
+		t.Fail()
+	}
+}
+
+func TestGetTask(t *testing.T) {
+	rp, err := OpenDb()
+	if err != nil {
+		log.Println(err)
+		t.Fail()
+	}
+
+	fetchedTask, err := rp.GetTask(context.Background(), uuid.MustParse("da405c59-bdf5-4483-9ce1-0187ebfd16a7"))
+	if err != nil {
+		log.Println(err)
+		t.Fail()
+	}
+
+	spew.Dump(fetchedTask)
 }
