@@ -36,7 +36,7 @@ type UpdateTaskParams struct {
 
 var (
 	ErrTaskNotFound = errors.New("task not found")
-	ErrUserNotFound = errors.New("user don't exists")
+	ErrUserNotFound = errors.New("user doesn't exist")
 )
 
 const (

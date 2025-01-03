@@ -8,7 +8,8 @@ import (
 	"github.com/kelseyhightower/envconfig"
 
 	"github.com/aspirin100/TaskManager/internal/database"
-	"github.com/aspirin100/TaskManager/internal/usecase"
+	"github.com/aspirin100/TaskManager/internal/logger"
+	taskUsecase "github.com/aspirin100/TaskManager/internal/usecase"
 )
 
 type Config struct {
@@ -16,12 +17,6 @@ type Config struct {
 	Hostname    string `envconfig:"TASK_SERVER_HOSTNAME" default:":8000"`
 	Environment string `envconfig:"TASK_SERVER_ENV" default:"local"`
 }
-
-const (
-	envLocal = "local"
-	envProd  = "prod"
-	envDev   = "dev"
-)
 
 func main() {
 
@@ -33,12 +28,15 @@ func main() {
 		os.Exit(1)
 	}
 
-	logger := setupLogger(config.Environment)
-	logger.Debug("logger setuped", slog.String("env", config.Environment))
+	
+	logg := logger.Default()
+	logger.SetupLogger(config.Environment)
+
+	logg.Debug("logger setuped", slog.String("env", config.Environment))
 
 	db, err := database.UpDatabase("postgres", config.PostgresDSN)
 	if err != nil {
-		logger.Error(err.Error())
+		logg.Error(err.Error())
 		os.Exit(1)
 	}
 
@@ -51,29 +49,8 @@ func main() {
 
 	err = http.ListenAndServe(config.Hostname, nil)
 	if err != nil {
-		logger.Error(err.Error())
+		logg.Error(err.Error())
 		os.Exit(1)
 	}
 
-}
-
-func setupLogger(env string) *slog.Logger {
-	var logger *slog.Logger
-
-	switch env {
-	case envLocal:
-		logger = slog.New(
-			slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug}),
-		)
-	case envDev:
-		logger = slog.New(
-			slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug}),
-		)
-	case envProd:
-		logger = slog.New(
-			slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo}),
-		)
-	}
-
-	return logger
 }
