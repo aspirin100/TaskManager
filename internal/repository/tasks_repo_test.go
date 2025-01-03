@@ -1,4 +1,4 @@
-package database_test
+package tasks_repo_test
 
 import (
 	"context"
@@ -6,20 +6,21 @@ import (
 	"log"
 	"testing"
 
-	"github.com/aspirin100/TaskManager/internal/database"
 	"github.com/aspirin100/TaskManager/internal/logger"
+	"github.com/aspirin100/TaskManager/internal/repository"
+
 
 	"github.com/davecgh/go-spew/spew"
 	"github.com/google/uuid"
 )
 
-func OpenDb() (database.PostgresRepo, error) {
+func OpenDb() (tasks_repo.PostgresRepo, error) {
 	db, err := sql.Open("postgres", "postgres://postgres:postgres@localhost:5432/task-manager?sslmode=disable")
 	if err != nil {
-		return database.PostgresRepo{}, err
+		return tasks_repo.PostgresRepo{}, err
 	}
 
-	rp := database.PostgresRepo{
+	rp := tasks_repo.PostgresRepo{
 		DB: db,
 	}
 
@@ -34,7 +35,7 @@ func TestInsertNewTaskFail(t *testing.T) {
 		t.Fail()
 	}
 
-	params := database.InsertTaskParams{
+	params := tasks_repo.InsertTaskParams{
 		Description: "test description",
 		Status:      1,
 	}
@@ -52,7 +53,7 @@ func TestInsertNewTask(t *testing.T) {
 		t.Fail()
 	}
 
-	params := database.InsertTaskParams{
+	params := tasks_repo.InsertTaskParams{
 		UserID:      uuid.MustParse("e05fa11d-eec3-4fba-b223-d6516800a047"),
 		Description: "test description",
 		Status:      1,
@@ -85,7 +86,7 @@ func TestUpdateTask(t *testing.T) {
 		log.Println(err)
 		t.Fail()
 	}
-	params := database.UpdateTaskParams{
+	params := tasks_repo.UpdateTaskParams{
 		TaskID:      uuid.MustParse("da405c59-bdf5-4483-9ce1-0187ebfd16a7"),
 		Name:        "test name",
 		Description: "updated description",

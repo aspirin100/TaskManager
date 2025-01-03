@@ -3,7 +3,7 @@ package taskUsecase
 import (
 	"context"
 
-	"github.com/aspirin100/TaskManager/internal/database"
+	tasks_repo "github.com/aspirin100/TaskManager/internal/repository"
 	"github.com/aspirin100/TaskManager/internal/tasks"
 )
 
@@ -11,7 +11,7 @@ import (
 var _ usecaseHandler = UsecaseHandler{}
 
 type UsecaseHandler struct {
-	DBRepo database.PostgresRepo
+	DBRepo tasks_repo.PostgresRepo
 }
 
 func (h UsecaseHandler) CreateTask(ctx context.Context, req CreateTaskRequest) (CreateTaskResponse, error) {

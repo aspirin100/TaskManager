@@ -1,4 +1,4 @@
-package database
+package tasks_repo
 
 import (
 	"context"

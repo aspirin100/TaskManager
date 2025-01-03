@@ -5,10 +5,12 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 	"github.com/kelseyhightower/envconfig"
 
-	"github.com/aspirin100/TaskManager/internal/database"
 	"github.com/aspirin100/TaskManager/internal/logger"
+	tasks_repo "github.com/aspirin100/TaskManager/internal/repository"
 	taskUsecase "github.com/aspirin100/TaskManager/internal/usecase"
 )
 
@@ -28,24 +30,27 @@ func main() {
 		os.Exit(1)
 	}
 
-	
 	logg := logger.Default()
 	logger.SetupLogger(config.Environment)
 
 	logg.Debug("logger setuped", slog.String("env", config.Environment))
 
-	db, err := database.UpDatabase("postgres", config.PostgresDSN)
+	db, err := tasks_repo.UpDatabase("postgres", config.PostgresDSN)
 	if err != nil {
 		logg.Error(err.Error())
 		os.Exit(1)
 	}
 
 	handler := taskUsecase.UsecaseHandler{
-		DBRepo: database.PostgresRepo{
+		DBRepo: tasks_repo.PostgresRepo{
 			DB: db,
 		},
 	}
 	_ = handler
+
+	router := chi.NewRouter()
+
+	router.Use(middleware.RequestID)
 
 	err = http.ListenAndServe(config.Hostname, nil)
 	if err != nil {
