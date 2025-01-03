@@ -9,7 +9,7 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/kelseyhightower/envconfig"
 
-	"github.com/aspirin100/TaskManager/internal/logger"
+	"github.com/aspirin100/TaskManager/internal/api/server/middleware/logger"
 	tasks_repo "github.com/aspirin100/TaskManager/internal/repository"
 	taskUsecase "github.com/aspirin100/TaskManager/internal/usecase"
 )
@@ -20,8 +20,13 @@ type Config struct {
 	Environment string `envconfig:"TASK_SERVER_ENV" default:"local"`
 }
 
-func main() {
+const (
+	envLocal = "local"
+	envDev   = "dev"
+	envProd  = "prod"
+)
 
+func main() {
 	config := Config{}
 
 	err := envconfig.Process("task-server", &config)
@@ -30,9 +35,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	logg := logger.Default()
-	logger.SetupLogger(config.Environment)
-
+	logg := setupLogger(config.Environment)
 	logg.Debug("logger setuped", slog.String("env", config.Environment))
 
 	db, err := tasks_repo.UpDatabase("postgres", config.PostgresDSN)
@@ -51,6 +54,7 @@ func main() {
 	router := chi.NewRouter()
 
 	router.Use(middleware.RequestID)
+	router.Use(logger.New(logg))
 
 	err = http.ListenAndServe(config.Hostname, nil)
 	if err != nil {
@@ -58,4 +62,25 @@ func main() {
 		os.Exit(1)
 	}
 
+}
+
+func setupLogger(env string) *slog.Logger {
+	var log *slog.Logger
+
+	switch env {
+	case envLocal:
+		log = slog.New(
+			slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug}),
+		)
+	case envDev:
+		log = slog.New(
+			slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug}),
+		)
+	case envProd:
+		log = slog.New(
+			slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo}),
+		)
+	}
+
+	return log
 }

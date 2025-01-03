@@ -6,7 +6,6 @@ import (
 	"log"
 	"testing"
 
-	"github.com/aspirin100/TaskManager/internal/logger"
 	"github.com/aspirin100/TaskManager/internal/repository"
 
 
@@ -31,7 +30,7 @@ func TestInsertNewTaskFail(t *testing.T) {
 
 	rp, err := OpenDb()
 	if err != nil {
-		logger.Default().Debug(err.Error())
+		log.Println(err)
 		t.Fail()
 	}
 
@@ -42,14 +41,14 @@ func TestInsertNewTaskFail(t *testing.T) {
 
 	_, err = rp.InsertNewTask(context.Background(), params)
 	if err != nil {
-		logger.Default().Debug(err.Error())
+		log.Println(err)
 	}
 }
 
 func TestInsertNewTask(t *testing.T) {
 	rp, err := OpenDb()
 	if err != nil {
-		logger.Default().Debug(err.Error())
+		log.Println(err)
 		t.Fail()
 	}
 
@@ -61,7 +60,7 @@ func TestInsertNewTask(t *testing.T) {
 
 	_, err = rp.InsertNewTask(context.Background(), params)
 	if err != nil {
-		logger.Default().Debug(err.Error())
+		log.Println(err)
 		t.Fail()
 	}
 }
@@ -69,13 +68,13 @@ func TestInsertNewTask(t *testing.T) {
 func TestDeleteTask(t *testing.T) {
 	rp, err := OpenDb()
 	if err != nil {
-		logger.Default().Debug(err.Error())
+		log.Println(err)
 		t.Fail()
 	}
 
 	err = rp.DeleteTask(context.Background(), uuid.MustParse("c436ce0a-7bf8-420a-8ea2-ca798689f14e"))
 	if err != nil {
-		logger.Default().Debug(err.Error())
+		log.Println(err)
 		t.Fail()
 	}
 }
@@ -95,7 +94,7 @@ func TestUpdateTask(t *testing.T) {
 
 	_, err = rp.UpdateTask(context.Background(), params)
 	if err != nil {
-		logger.Default().Debug(err.Error())
+		log.Println(err)
 		t.Fail()
 	}
 }
@@ -103,13 +102,13 @@ func TestUpdateTask(t *testing.T) {
 func TestGetTask(t *testing.T) {
 	rp, err := OpenDb()
 	if err != nil {
-		logger.Default().Debug(err.Error())
+		log.Println(err)
 		t.Fail()
 	}
 
 	fetchedTask, err := rp.GetTask(context.Background(), uuid.MustParse("da405c59-bdf5-4483-9ce1-0187ebfd16a7"))
 	if err != nil {
-		logger.Default().Debug(err.Error())
+		log.Println(err)
 		t.Fail()
 	}
 
