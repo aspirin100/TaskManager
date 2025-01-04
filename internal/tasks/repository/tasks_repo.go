@@ -18,14 +18,6 @@ type PostgresRepo struct {
 	DB *sql.DB
 }
 
-type InsertTaskParams struct {
-	UserID      uuid.UUID
-	Type        string
-	Name        string
-	Description string
-	Status      uint8
-}
-
 type UpdateTaskParams struct {
 	TaskID      uuid.UUID
 	Type        string
@@ -43,7 +35,18 @@ const (
 	ForeignKeyViolationCode = "23503"
 )
 
-func UpDatabase(driver, DSN string) (*sql.DB, error) {
+func New(DSN string) (PostgresRepo, error) {
+	db, err := upDatabase("postgres", DSN)
+	if err != nil {
+		return PostgresRepo{}, fmt.Errorf("posgtres repository creation error: %w", err)
+	}
+
+	return PostgresRepo{
+		DB: db,
+	}, nil
+}
+
+func upDatabase(driver, DSN string) (*sql.DB, error) {
 	db, err := sql.Open(driver, DSN)
 	if err != nil {
 		return nil, fmt.Errorf("open database error: %w", err)
@@ -59,8 +62,7 @@ func UpDatabase(driver, DSN string) (*sql.DB, error) {
 	return db, nil
 }
 
-func (pg *PostgresRepo) InsertNewTask(ctx context.Context, params InsertTaskParams) (uuid.UUID, error) {
-
+func (pg *PostgresRepo) CreateTask(ctx context.Context, params tasks.CreateTaskRequest) (uuid.UUID, error) {
 	taskID := uuid.New()
 
 	_, err := pg.DB.ExecContext(ctx, InsertTaskQuery, taskID,
@@ -144,7 +146,7 @@ func (pg *PostgresRepo) GetTask(ctx context.Context, taskID uuid.UUID) (tasks.Ta
 	}
 
 	err = row.Scan(
-		&res.ID,
+		&res.TaskID,
 		&userID,
 		&res.Type,
 		&res.Name,

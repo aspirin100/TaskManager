@@ -9,7 +9,8 @@ import (
 	"github.com/davecgh/go-spew/spew"
 	"github.com/google/uuid"
 
-	"github.com/aspirin100/TaskManager/internal/tasks/repository"
+	"github.com/aspirin100/TaskManager/internal/tasks"
+	tasksRepository "github.com/aspirin100/TaskManager/internal/tasks/repository"
 )
 
 func OpenDb() (tasksRepository.PostgresRepo, error) {
@@ -25,7 +26,7 @@ func OpenDb() (tasksRepository.PostgresRepo, error) {
 	return rp, nil
 }
 
-func TestInsertNewTaskFail(t *testing.T) {
+func TestCreateTaskFail(t *testing.T) {
 
 	rp, err := OpenDb()
 	if err != nil {
@@ -33,31 +34,31 @@ func TestInsertNewTaskFail(t *testing.T) {
 		t.Fail()
 	}
 
-	params := tasksRepository.InsertTaskParams{
+	params := tasks.CreateTaskRequest{
 		Description: "test description",
 		Status:      1,
 	}
 
-	_, err = rp.InsertNewTask(context.Background(), params)
+	_, err = rp.CreateTask(context.Background(), params)
 	if err != nil {
 		log.Println(err)
 	}
 }
 
-func TestInsertNewTask(t *testing.T) {
+func TestCreateTask(t *testing.T) {
 	rp, err := OpenDb()
 	if err != nil {
 		log.Println(err)
 		t.Fail()
 	}
 
-	params := tasksRepository.InsertTaskParams{
+	params := tasks.CreateTaskRequest{
 		UserID:      uuid.MustParse("e05fa11d-eec3-4fba-b223-d6516800a047"),
 		Description: "test description",
 		Status:      1,
 	}
 
-	_, err = rp.InsertNewTask(context.Background(), params)
+	_, err = rp.CreateTask(context.Background(), params)
 	if err != nil {
 		log.Println(err)
 		t.Fail()

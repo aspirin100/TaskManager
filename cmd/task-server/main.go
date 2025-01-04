@@ -10,8 +10,9 @@ import (
 	"github.com/kelseyhightower/envconfig"
 
 	"github.com/aspirin100/TaskManager/internal/api/server/middleware/logger"
+	"github.com/aspirin100/TaskManager/internal/logger/sl"
+	"github.com/aspirin100/TaskManager/internal/tasks/handlers/create"
 	tasksRepository "github.com/aspirin100/TaskManager/internal/tasks/repository"
-	tasksUsecase "github.com/aspirin100/TaskManager/internal/tasks/usecase"
 )
 
 type Config struct {
@@ -38,32 +39,31 @@ func main() {
 	logg := setupLogger(config.Environment)
 	logg.Debug("logger setuped", slog.String("env", config.Environment))
 
-	db, err := tasksRepository.UpDatabase("postgres", config.PostgresDSN)
+	db, err := tasksRepository.New(config.PostgresDSN)
 	if err != nil {
 		logg.Error(err.Error())
 		os.Exit(1)
 	}
-
-	handler := tasksUsecase.UsecaseHandler{
-		DBRepo: tasksRepository.PostgresRepo{
-			DB: db,
-		},
-	}
-	_ = handler
 
 	router := chi.NewRouter()
 
 	router.Use(logger.New(logg))
 	router.Use(middleware.RequestID)
 	router.Use(middleware.Recoverer)
-	router.Use(middleware.URLFormat)
+	router.Post("/{userID}/task", create.NewTask(logg, &db))
 
-	err = http.ListenAndServe(config.Hostname, nil)
+	server := http.Server{
+		Addr:    config.Hostname,
+		Handler: router,
+	}
+
+	err = server.ListenAndServe()
 	if err != nil {
-		logg.Error(err.Error())
+		logg.Error("server start failed", sl.Err(err))
 		os.Exit(1)
 	}
 
+	logg.Error("server stopped")
 }
 
 func setupLogger(env string) *slog.Logger {
