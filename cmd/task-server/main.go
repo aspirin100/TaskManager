@@ -11,7 +11,7 @@ import (
 
 	"github.com/aspirin100/TaskManager/internal/api/server/middleware/logger"
 	"github.com/aspirin100/TaskManager/internal/logger/sl"
-	"github.com/aspirin100/TaskManager/internal/tasks/handlers/create"
+	tasksUsecase "github.com/aspirin100/TaskManager/internal/tasks/handlers"
 	tasksRepository "github.com/aspirin100/TaskManager/internal/tasks/repository"
 )
 
@@ -50,7 +50,9 @@ func main() {
 	router.Use(logger.New(logg))
 	router.Use(middleware.RequestID)
 	router.Use(middleware.Recoverer)
-	router.Post("/{userID}/task", create.NewTask(logg, &db))
+
+	router.Post("/{userID}/task", tasksUsecase.CreateNewTask(logg, &db))
+	router.Get("/{userID}/task", tasksUsecase.GetTask(logg, &db))
 
 	server := http.Server{
 		Addr:    config.Hostname,

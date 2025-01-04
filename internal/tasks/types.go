@@ -12,8 +12,8 @@ type Task struct {
 	Name        string     `json:"name,omitempty"`
 	Description string     `json:"description"`
 	Status      uint8      `json:"status"`
-	CreatedAt   time.Time  `json:"created_at,omitempty"`
-	UpdatedAt   *time.Time `json:"updated_at,omitempty"`
+	CreatedAt   time.Time  `json:"createdAt,omitempty"`
+	UpdatedAt   *time.Time `json:"updatedAt,omitempty"`
 }
 
 type CreateTaskRequest struct {

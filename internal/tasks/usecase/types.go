@@ -11,9 +11,6 @@ type CreateTaskRequest struct {
 	Status      uint8  `json:"status"`
 }
 
-type GetTaskRequest struct {
-	ID uuid.UUID `json:"id"`
-}
 
 type UpdateTaskRequest struct {
 	ID          uuid.UUID `json:"id"`

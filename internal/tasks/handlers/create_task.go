@@ -1,4 +1,4 @@
-package create
+package tasksUsecase
 
 import (
 	"context"
@@ -22,9 +22,9 @@ type TaskCreator interface {
 	CreateTask(ctx context.Context, params tasks.CreateTaskRequest) (uuid.UUID, error)
 }
 
-func NewTask(log *slog.Logger, taskCreator TaskCreator) http.HandlerFunc {
+func CreateNewTask(log *slog.Logger, taskCreator TaskCreator) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		const op = "handlers.create.New"
+		const op = "tasksUsecase.CreateNewTask"
 
 		log := log.With(
 			slog.String("op", op),
@@ -77,13 +77,8 @@ func NewTask(log *slog.Logger, taskCreator TaskCreator) http.HandlerFunc {
 
 		log.Info("task created:", slog.String("taskID", taskID.String()))
 
-		responseOK(w, r, taskID)
+		response.ResponseOK(w, r, taskID)
 	}
 }
 
-func responseOK(w http.ResponseWriter, r *http.Request, taskID uuid.UUID) {
-	render.JSON(w, r, response.Response{
-		TaskID: taskID,
-		Status: response.StatusOK,
-	})
-}
+
