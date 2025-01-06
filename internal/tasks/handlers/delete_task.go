@@ -12,22 +12,25 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/aspirin100/TaskManager/internal/logger/sl"
-	"github.com/aspirin100/TaskManager/internal/tasks"
 	"github.com/aspirin100/TaskManager/internal/tasks/handlers/response"
 	tasksRepository "github.com/aspirin100/TaskManager/internal/tasks/repository"
 )
 
-type TaskUpdater interface {
-	UpdateTask(ctx context.Context, params tasks.UpdateTaskRequest) (uuid.UUID, error)
+type deleteTaskRequest struct {
+	TaskID uuid.UUID `json:"taskid"`
 }
 
-func UpdateTask(log *slog.Logger, taskUpdater TaskUpdater) http.HandlerFunc {
+type TaskDeleter interface {
+	DeleteTask(ctx context.Context, taskID uuid.UUID) error
+}
+
+func DeleteTask(log *slog.Logger, taskDeleter TaskDeleter) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		const op = "tasksUsecase.UpdateTask"
+		const op = "tasksUsecase.DeleteTask"
 
 		log := log.With(
 			slog.String("op", op),
-			slog.String("request_id", middleware.GetReqID(r.Context())),
+			slog.String("requestID", middleware.GetReqID(r.Context())),
 		)
 
 		_, err := parseUserID(log, r)
@@ -37,7 +40,7 @@ func UpdateTask(log *slog.Logger, taskUpdater TaskUpdater) http.HandlerFunc {
 			return
 		}
 
-		var req tasks.UpdateTaskRequest
+		var req deleteTaskRequest
 
 		err = render.DecodeJSON(r.Body, &req)
 		if err != nil {
@@ -54,22 +57,20 @@ func UpdateTask(log *slog.Logger, taskUpdater TaskUpdater) http.HandlerFunc {
 
 		log.Info("request body decoded", slog.Any("request", req))
 
-		taskID, err := taskUpdater.UpdateTask(r.Context(), req)
+		err = taskDeleter.DeleteTask(r.Context(), req.TaskID)
 		if err != nil {
 			switch {
 			case errors.Is(err, tasksRepository.ErrTaskNotFound):
 				log.Error("task not found", sl.Err(err))
 				render.JSON(w, r, response.Error("task not found", req.TaskID))
 			default:
-				log.Error("update task failed", sl.Err(err))
-				render.JSON(w, r, response.Error("update task failed", req.TaskID))
+				log.Error("delete task failed", sl.Err(err))
+				render.JSON(w, r, response.Error("delete task failed", req.TaskID))
 			}
 
 			return
 		}
 
-		log.Info("task updated:", slog.String("taskID", taskID.String()))
-
-		response.ResponseOK(w, r, taskID)
+		response.ResponseOK(w, r, req.TaskID)
 	}
 }

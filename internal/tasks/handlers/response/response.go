@@ -13,13 +13,14 @@ const (
 )
 
 type Response struct {
-	TaskID uuid.UUID `json:"taskID,omitempty"`
-	Status string    `json:"Status"`
+	TaskID uuid.UUID `json:"taskid,omitempty"`
+	Status string    `json:"status"`
 	Error  *string   `json:"error,omitempty"`
 }
 
-func Error(msg string) Response {
+func Error(msg string, taskID uuid.UUID) Response {
 	return Response{
+		TaskID: taskID,
 		Status: StatusError,
 		Error:  &msg,
 	}

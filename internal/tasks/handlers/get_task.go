@@ -36,7 +36,7 @@ func GetTask(log *slog.Logger, taskReader TaskReader) http.HandlerFunc {
 
 		_, err := parseUserID(log, r)
 		if err != nil {
-			render.JSON(w, r, response.Error("wrong user id format"))
+			render.JSON(w, r, response.Error("wrong user id format", uuid.Nil))
 
 			return
 		}
@@ -47,11 +47,11 @@ func GetTask(log *slog.Logger, taskReader TaskReader) http.HandlerFunc {
 		if err != nil {
 			if errors.Is(err, io.EOF) {
 				log.Error("request body is empty")
-				render.JSON(w, r, response.Error("empty request"))
+				render.JSON(w, r, response.Error("empty request", uuid.Nil))
 			}
 
 			log.Error("failed to decode request body", sl.Err(err))
-			render.JSON(w, r, response.Error("failed to decode request"))
+			render.JSON(w, r, response.Error("failed to decode request", uuid.Nil))
 
 			return
 		}
@@ -63,10 +63,10 @@ func GetTask(log *slog.Logger, taskReader TaskReader) http.HandlerFunc {
 			switch {
 			case errors.Is(err, tasksRepository.ErrTaskNotFound):
 				log.Error("task not found", sl.Err(err))
-				render.JSON(w, r, response.Error("task not found"))
+				render.JSON(w, r, response.Error("task not found", req.TaskID))
 			default:
 				log.Error("get task failed", sl.Err(err))
-				render.JSON(w, r, response.Error("get task failed"))
+				render.JSON(w, r, response.Error("get task failed", req.TaskID))
 			}
 
 			return
