@@ -3,7 +3,8 @@
 create table if not exists users
 (
     id uuid primary key not null,
-    name varchar(1019)
+    email varchar(255) not null,
+    password varchar(16) not null
 );
 
 alter table tasks
