@@ -18,14 +18,6 @@ type PostgresRepo struct {
 	DB *sql.DB
 }
 
-type UpdateTaskParams struct {
-	TaskID      uuid.UUID
-	Type        string
-	Name        string
-	Description string
-	Status      uint8
-}
-
 var (
 	ErrTaskNotFound = errors.New("task not found")
 	ErrUserNotFound = errors.New("user doesn't exist")
@@ -107,7 +99,7 @@ func (pg *PostgresRepo) DeleteTask(ctx context.Context, taskID uuid.UUID) error 
 	return nil
 }
 
-func (pg *PostgresRepo) UpdateTask(ctx context.Context, params UpdateTaskParams) (uuid.UUID, error) {
+func (pg *PostgresRepo) UpdateTask(ctx context.Context, params tasks.UpdateTaskRequest) (uuid.UUID, error) {
 
 	res, err := pg.DB.ExecContext(ctx, UpdateTaskQuery,
 		params.TaskID,

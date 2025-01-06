@@ -17,29 +17,27 @@ import (
 	tasksRepository "github.com/aspirin100/TaskManager/internal/tasks/repository"
 )
 
-type TaskCreator interface {
-	CreateTask(ctx context.Context, params tasks.CreateTaskRequest) (uuid.UUID, error)
+type TaskUpdater interface {
+	UpdateTask(ctx context.Context, params tasks.UpdateTaskRequest) (uuid.UUID, error)
 }
 
-func CreateNewTask(log *slog.Logger, taskCreator TaskCreator) http.HandlerFunc {
+func UpdateTask(log *slog.Logger, taskUpdater TaskUpdater) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		const op = "tasksUsecase.CreateNewTask"
+		const op = "tasksUsecase.UpdateTask"
 
 		log := log.With(
 			slog.String("op", op),
 			slog.String("request_id", middleware.GetReqID(r.Context())),
 		)
 
-
-		userID, err := parseUserID(log, r)
+		_, err := parseUserID(log, r)
 		if err != nil {
 			render.JSON(w, r, response.Error("wrong user id format"))
 
 			return
 		}
 
-		var req tasks.CreateTaskRequest
-		req.UserID = userID
+		var req tasks.UpdateTaskRequest
 
 		err = render.DecodeJSON(r.Body, &req)
 		if err != nil {
@@ -56,24 +54,21 @@ func CreateNewTask(log *slog.Logger, taskCreator TaskCreator) http.HandlerFunc {
 
 		log.Info("request body decoded", slog.Any("request", req))
 
-		taskID, err := taskCreator.CreateTask(r.Context(), req)
+		taskID, err := taskUpdater.UpdateTask(r.Context(), req)
 		if err != nil {
 			switch {
 			case errors.Is(err, tasksRepository.ErrTaskNotFound):
 				log.Error("task not found", sl.Err(err))
 				render.JSON(w, r, response.Error("task not found"))
-			case errors.Is(err, tasksRepository.ErrUserNotFound):
-				log.Error("user not found", sl.Err(err))
-				render.JSON(w, r, response.Error("user not found"))
 			default:
-				log.Error("create task failed", sl.Err(err))
-				render.JSON(w, r, response.Error("create task failed"))
+				log.Error("update task failed", sl.Err(err))
+				render.JSON(w, r, response.Error("update task failed"))
 			}
 
 			return
 		}
 
-		log.Info("task created:", slog.String("taskID", taskID.String()))
+		log.Info("task updated:", slog.String("taskID", taskID.String()))
 
 		response.ResponseOK(w, r, taskID)
 	}

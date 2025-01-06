@@ -85,7 +85,7 @@ func TestUpdateTask(t *testing.T) {
 		log.Println(err)
 		t.Fail()
 	}
-	params := tasksRepository.UpdateTaskParams{
+	params := tasks.UpdateTaskRequest{
 		TaskID:      uuid.MustParse("da405c59-bdf5-4483-9ce1-0187ebfd16a7"),
 		Name:        "test name",
 		Description: "updated description",

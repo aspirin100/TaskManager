@@ -18,7 +18,7 @@ import (
 )
 
 type getTaskRequest struct {
-	TaskID uuid.UUID `json:"taskID"`
+	TaskID uuid.UUID `json:"taskid"`
 }
 
 type TaskReader interface {
@@ -34,9 +34,16 @@ func GetTask(log *slog.Logger, taskReader TaskReader) http.HandlerFunc {
 			slog.String("requestID", middleware.GetReqID(r.Context())),
 		)
 
+		_, err := parseUserID(log, r)
+		if err != nil {
+			render.JSON(w, r, response.Error("wrong user id format"))
+
+			return
+		}
+
 		var req getTaskRequest
 
-		err := render.DecodeJSON(r.Body, &req)
+		err = render.DecodeJSON(r.Body, &req)
 		if err != nil {
 			if errors.Is(err, io.EOF) {
 				log.Error("request body is empty")

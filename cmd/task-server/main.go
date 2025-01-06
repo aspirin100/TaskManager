@@ -53,6 +53,7 @@ func main() {
 
 	router.Post("/{userID}/task", tasksUsecase.CreateNewTask(logg, &db))
 	router.Get("/{userID}/task", tasksUsecase.GetTask(logg, &db))
+	router.Put("/{userID}/task", tasksUsecase.UpdateTask(logg, &db))
 
 	server := http.Server{
 		Addr:    config.Hostname,
