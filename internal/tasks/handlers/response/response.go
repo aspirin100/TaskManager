@@ -4,21 +4,21 @@ import (
 	"net/http"
 
 	"github.com/go-chi/render"
-	"github.com/google/uuid"
 )
 
 const (
 	StatusOK    = "OK"
 	StatusError = "Error"
+	ErrNilString = ""
 )
 
 type Response struct {
-	TaskID uuid.UUID `json:"taskid,omitempty"`
-	Status string    `json:"status"`
-	Error  *string   `json:"error,omitempty"`
+	TaskID string  `json:"taskid,omitempty"`
+	Status string  `json:"status"`
+	Error  *string `json:"error,omitempty"`
 }
 
-func Error(msg string, taskID uuid.UUID) Response {
+func Error(msg string, taskID string) Response {
 	return Response{
 		TaskID: taskID,
 		Status: StatusError,
@@ -26,7 +26,7 @@ func Error(msg string, taskID uuid.UUID) Response {
 	}
 }
 
-func ResponseOK(w http.ResponseWriter, r *http.Request, taskID uuid.UUID) {
+func ResponseOK(w http.ResponseWriter, r *http.Request, taskID string) {
 	render.JSON(w, r, Response{
 		TaskID: taskID,
 		Status: StatusOK,

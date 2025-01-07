@@ -35,7 +35,7 @@ func DeleteTask(log *slog.Logger, taskDeleter TaskDeleter) http.HandlerFunc {
 
 		_, err := parseUserID(log, r)
 		if err != nil {
-			render.JSON(w, r, response.Error("wrong user id format", uuid.Nil))
+			render.JSON(w, r, response.Error("wrong user id format", response.ErrNilString))
 
 			return
 		}
@@ -46,11 +46,11 @@ func DeleteTask(log *slog.Logger, taskDeleter TaskDeleter) http.HandlerFunc {
 		if err != nil {
 			if errors.Is(err, io.EOF) {
 				log.Error("request body is empty")
-				render.JSON(w, r, response.Error("empty request", uuid.Nil))
+				render.JSON(w, r, response.Error("empty request", response.ErrNilString))
 			}
 
 			log.Error("failed to decode request body", sl.Err(err))
-			render.JSON(w, r, response.Error("failed to decode request", uuid.Nil))
+			render.JSON(w, r, response.Error("failed to decode request", response.ErrNilString))
 
 			return
 		}
@@ -62,15 +62,15 @@ func DeleteTask(log *slog.Logger, taskDeleter TaskDeleter) http.HandlerFunc {
 			switch {
 			case errors.Is(err, tasksRepository.ErrTaskNotFound):
 				log.Error("task not found", sl.Err(err))
-				render.JSON(w, r, response.Error("task not found", req.TaskID))
+				render.JSON(w, r, response.Error("task not found", req.TaskID.String()))
 			default:
 				log.Error("delete task failed", sl.Err(err))
-				render.JSON(w, r, response.Error("delete task failed", req.TaskID))
+				render.JSON(w, r, response.Error("delete task failed", req.TaskID.String()))
 			}
 
 			return
 		}
 
-		response.ResponseOK(w, r, req.TaskID)
+		response.ResponseOK(w, r, req.TaskID.String())
 	}
 }

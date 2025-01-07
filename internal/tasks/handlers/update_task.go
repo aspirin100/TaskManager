@@ -32,7 +32,7 @@ func UpdateTask(log *slog.Logger, taskUpdater TaskUpdater) http.HandlerFunc {
 
 		_, err := parseUserID(log, r)
 		if err != nil {
-			render.JSON(w, r, response.Error("wrong user id format", uuid.Nil))
+			render.JSON(w, r, response.Error("wrong user id format", response.ErrNilString))
 
 			return
 		}
@@ -43,11 +43,11 @@ func UpdateTask(log *slog.Logger, taskUpdater TaskUpdater) http.HandlerFunc {
 		if err != nil {
 			if errors.Is(err, io.EOF) {
 				log.Error("request body is empty")
-				render.JSON(w, r, response.Error("empty request", uuid.Nil))
+				render.JSON(w, r, response.Error("empty request", response.ErrNilString))
+			} else {
+				log.Error("failed to decode request body", sl.Err(err))
+				render.JSON(w, r, response.Error("failed to decode request", response.ErrNilString))
 			}
-
-			log.Error("failed to decode request body", sl.Err(err))
-			render.JSON(w, r, response.Error("failed to decode request", uuid.Nil))
 
 			return
 		}
@@ -59,10 +59,10 @@ func UpdateTask(log *slog.Logger, taskUpdater TaskUpdater) http.HandlerFunc {
 			switch {
 			case errors.Is(err, tasksRepository.ErrTaskNotFound):
 				log.Error("task not found", sl.Err(err))
-				render.JSON(w, r, response.Error("task not found", req.TaskID))
+				render.JSON(w, r, response.Error("task not found", req.TaskID.String()))
 			default:
 				log.Error("update task failed", sl.Err(err))
-				render.JSON(w, r, response.Error("update task failed", req.TaskID))
+				render.JSON(w, r, response.Error("update task failed", req.TaskID.String()))
 			}
 
 			return
@@ -70,6 +70,6 @@ func UpdateTask(log *slog.Logger, taskUpdater TaskUpdater) http.HandlerFunc {
 
 		log.Info("task updated:", slog.String("taskID", taskID.String()))
 
-		response.ResponseOK(w, r, taskID)
+		response.ResponseOK(w, r, taskID.String())
 	}
 }

@@ -32,7 +32,7 @@ func CreateNewTask(log *slog.Logger, taskCreator TaskCreator) http.HandlerFunc {
 
 		userID, err := parseUserID(log, r)
 		if err != nil {
-			render.JSON(w, r, response.Error("wrong user id format", uuid.Nil))
+			render.JSON(w, r, response.Error("wrong user id format", response.ErrNilString))
 
 			return
 		}
@@ -44,11 +44,11 @@ func CreateNewTask(log *slog.Logger, taskCreator TaskCreator) http.HandlerFunc {
 		if err != nil {
 			if errors.Is(err, io.EOF) {
 				log.Error("request body is empty")
-				render.JSON(w, r, response.Error("empty request", uuid.Nil))
+				render.JSON(w, r, response.Error("empty request", response.ErrNilString))
 			}
 
 			log.Error("failed to decode request body", sl.Err(err))
-			render.JSON(w, r, response.Error("failed to decode request", uuid.Nil))
+			render.JSON(w, r, response.Error("failed to decode request", response.ErrNilString))
 
 			return
 		}
@@ -60,10 +60,10 @@ func CreateNewTask(log *slog.Logger, taskCreator TaskCreator) http.HandlerFunc {
 			switch {
 			case errors.Is(err, tasksRepository.ErrUserNotFound):
 				log.Error("user not found", sl.Err(err))
-				render.JSON(w, r, response.Error("user not found", uuid.Nil))
+				render.JSON(w, r, response.Error("user not found", response.ErrNilString))
 			default:
 				log.Error("create task failed", sl.Err(err))
-				render.JSON(w, r, response.Error("create task failed", uuid.Nil))
+				render.JSON(w, r, response.Error("create task failed", response.ErrNilString))
 			}
 
 			return
@@ -71,6 +71,6 @@ func CreateNewTask(log *slog.Logger, taskCreator TaskCreator) http.HandlerFunc {
 
 		log.Info("task created:", slog.String("taskID", taskID.String()))
 
-		response.ResponseOK(w, r, taskID)
+		response.ResponseOK(w, r, taskID.String())
 	}
 }
