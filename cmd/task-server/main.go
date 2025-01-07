@@ -10,9 +10,9 @@ import (
 	"github.com/kelseyhightower/envconfig"
 
 	"github.com/aspirin100/TaskManager/internal/api/server/middleware/logger"
+	validate "github.com/aspirin100/TaskManager/internal/api/server/middleware/user_validator"
 	"github.com/aspirin100/TaskManager/internal/logger/sl"
 	tasksUsecase "github.com/aspirin100/TaskManager/internal/tasks/handlers"
-	validate "github.com/aspirin100/TaskManager/internal/tasks/handlers/middleware/user_validator"
 	tasksRepository "github.com/aspirin100/TaskManager/internal/tasks/repository"
 )
 
