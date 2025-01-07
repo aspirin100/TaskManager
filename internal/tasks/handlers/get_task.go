@@ -34,7 +34,7 @@ func GetTask(log *slog.Logger, taskReader TaskReader) http.HandlerFunc {
 			slog.String("requestID", middleware.GetReqID(r.Context())),
 		)
 
-		_, err := parseUserID(log, r)
+		_, err := ParseUserID(log, r)
 		if err != nil {
 			render.JSON(w, r, response.Error("wrong user id format", response.ErrNilString))
 
@@ -48,10 +48,10 @@ func GetTask(log *slog.Logger, taskReader TaskReader) http.HandlerFunc {
 			if errors.Is(err, io.EOF) {
 				log.Error("request body is empty")
 				render.JSON(w, r, response.Error("empty request", response.ErrNilString))
+			} else {
+				log.Error("failed to decode request body", sl.Err(err))
+				render.JSON(w, r, response.Error("failed to decode request", response.ErrNilString))
 			}
-
-			log.Error("failed to decode request body", sl.Err(err))
-			render.JSON(w, r, response.Error("failed to decode request", response.ErrNilString))
 
 			return
 		}

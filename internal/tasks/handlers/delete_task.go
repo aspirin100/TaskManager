@@ -33,7 +33,7 @@ func DeleteTask(log *slog.Logger, taskDeleter TaskDeleter) http.HandlerFunc {
 			slog.String("requestID", middleware.GetReqID(r.Context())),
 		)
 
-		_, err := parseUserID(log, r)
+		_, err := ParseUserID(log, r)
 		if err != nil {
 			render.JSON(w, r, response.Error("wrong user id format", response.ErrNilString))
 

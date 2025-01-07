@@ -12,6 +12,7 @@ import (
 	"github.com/aspirin100/TaskManager/internal/api/server/middleware/logger"
 	"github.com/aspirin100/TaskManager/internal/logger/sl"
 	tasksUsecase "github.com/aspirin100/TaskManager/internal/tasks/handlers"
+	validate "github.com/aspirin100/TaskManager/internal/tasks/handlers/middleware/user_validator"
 	tasksRepository "github.com/aspirin100/TaskManager/internal/tasks/repository"
 )
 
@@ -51,10 +52,14 @@ func main() {
 	router.Use(middleware.RequestID)
 	router.Use(middleware.Recoverer)
 
-	router.Post("/{userID}/task", tasksUsecase.CreateNewTask(logg, &db))
-	router.Get("/{userID}/task", tasksUsecase.GetTask(logg, &db))
-	router.Put("/{userID}/task", tasksUsecase.UpdateTask(logg, &db))
-	router.Delete("/{userID}/task", tasksUsecase.DeleteTask(logg, &db))
+	router.Route("/{userID}", func(r chi.Router) {
+		r.Use(validate.ValidateUser(logg, db))
+
+		r.Post("/task", tasksUsecase.CreateNewTask(logg, db))
+		r.Get("/task", tasksUsecase.GetTask(logg, db))
+		r.Put("/task", tasksUsecase.UpdateTask(logg, db))
+		r.Delete("/task", tasksUsecase.DeleteTask(logg, db))
+	})
 
 	server := http.Server{
 		Addr:    config.Hostname,

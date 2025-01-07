@@ -10,7 +10,7 @@ import (
 	"github.com/google/uuid"
 )
 
-func parseUserID(log *slog.Logger, r *http.Request) (uuid.UUID, error) {
+func ParseUserID(log *slog.Logger, r *http.Request) (uuid.UUID, error) {
 
 	userID, err := uuid.Parse(chi.URLParam(r, "userID"))
 	if err != nil {

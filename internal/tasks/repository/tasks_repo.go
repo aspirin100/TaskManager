@@ -27,13 +27,13 @@ const (
 	ForeignKeyViolationCode = "23503"
 )
 
-func New(DSN string) (PostgresRepo, error) {
+func New(DSN string) (*PostgresRepo, error) {
 	db, err := upDatabase("postgres", DSN)
 	if err != nil {
-		return PostgresRepo{}, fmt.Errorf("posgtres repository creation error: %w", err)
+		return &PostgresRepo{}, fmt.Errorf("posgtres repository creation error: %w", err)
 	}
 
-	return PostgresRepo{
+	return &PostgresRepo{
 		DB: db,
 	}, nil
 }
@@ -154,9 +154,28 @@ func (pg *PostgresRepo) GetTask(ctx context.Context, taskID uuid.UUID) (tasks.Ta
 	return res, nil
 }
 
+func (pg *PostgresRepo) CheckUserExists(ctx context.Context, userID uuid.UUID) error {
+	res, err := pg.DB.ExecContext(ctx, CheckUserQuery, userID)
+	if err != nil {
+		return fmt.Errorf("user check query error: %w", err)
+	}
+
+	rows, err := res.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("user check rows affected checking error: %w", err)
+	}
+
+	if rows == 0 {
+		return ErrUserNotFound
+	}
+
+	return nil
+}
+
 const (
 	InsertTaskQuery = `insert into tasks(taskID, userID, type, name, description, status) values ($1, $2, $3, $4, $5, $6)`
 	DeleteTaskQuery = `delete from tasks where taskID = $1`
 	UpdateTaskQuery = `update tasks set type = $2, name = $3, description = $4, status = $5 where taskID = $1`
 	GetTaskQuery    = `select * from tasks where taskID = $1`
+	CheckUserQuery  = `select * from users where id = $1`
 )

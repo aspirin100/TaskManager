@@ -30,7 +30,7 @@ func CreateNewTask(log *slog.Logger, taskCreator TaskCreator) http.HandlerFunc {
 			slog.String("request_id", middleware.GetReqID(r.Context())),
 		)
 
-		userID, err := parseUserID(log, r)
+		userID, err := ParseUserID(log, r)
 		if err != nil {
 			render.JSON(w, r, response.Error("wrong user id format", response.ErrNilString))
 
