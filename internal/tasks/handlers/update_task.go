@@ -45,6 +45,7 @@ func UpdateTask(log *slog.Logger, taskUpdater TaskUpdater) http.HandlerFunc {
 				render.JSON(w, r, response.Error("failed to decode request", response.ErrNilString))
 			}
 
+			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
 
@@ -57,9 +58,11 @@ func UpdateTask(log *slog.Logger, taskUpdater TaskUpdater) http.HandlerFunc {
 			switch {
 			case errors.Is(err, tasksRepository.ErrTaskNotFound):
 				log.Error("task not found", sl.Err(err))
+				w.WriteHeader(http.StatusNotFound)
 				render.JSON(w, r, response.Error("task not found", req.TaskID.String()))
 			default:
 				log.Error("update task failed", sl.Err(err))
+				w.WriteHeader(http.StatusInternalServerError)
 				render.JSON(w, r, response.Error("update task failed", req.TaskID.String()))
 			}
 

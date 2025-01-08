@@ -40,11 +40,12 @@ func CreateNewTask(log *slog.Logger, taskCreator TaskCreator) http.HandlerFunc {
 			if errors.Is(err, io.EOF) {
 				log.Error("request body is empty")
 				render.JSON(w, r, response.Error("empty request", response.ErrNilString))
+			} else {
+				log.Error("failed to decode request body", sl.Err(err))
+				render.JSON(w, r, response.Error("failed to decode request", response.ErrNilString))
 			}
 
-			log.Error("failed to decode request body", sl.Err(err))
-			render.JSON(w, r, response.Error("failed to decode request", response.ErrNilString))
-
+			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
 
@@ -57,9 +58,11 @@ func CreateNewTask(log *slog.Logger, taskCreator TaskCreator) http.HandlerFunc {
 			switch {
 			case errors.Is(err, tasksRepository.ErrUserNotFound):
 				log.Error("user not found", sl.Err(err))
+				w.WriteHeader(http.StatusNotFound)
 				render.JSON(w, r, response.Error("user not found", response.ErrNilString))
 			default:
 				log.Error("create task failed", sl.Err(err))
+				w.WriteHeader(http.StatusInternalServerError)
 				render.JSON(w, r, response.Error("create task failed", response.ErrNilString))
 			}
 

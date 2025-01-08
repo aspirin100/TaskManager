@@ -37,14 +37,16 @@ func DeleteTask(log *slog.Logger, taskDeleter TaskDeleter) http.HandlerFunc {
 
 		err := render.DecodeJSON(r.Body, &req)
 		if err != nil {
-			if errors.Is(err, io.EOF) {
+			switch {
+			case errors.Is(err, io.EOF):
 				log.Error("request body is empty")
 				render.JSON(w, r, response.Error("empty request", response.ErrNilString))
+			default:
+				log.Error("failed to decode request body", sl.Err(err))
+				render.JSON(w, r, response.Error("failed to decode request", response.ErrNilString))
 			}
 
-			log.Error("failed to decode request body", sl.Err(err))
-			render.JSON(w, r, response.Error("failed to decode request", response.ErrNilString))
-
+			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
 
@@ -57,9 +59,11 @@ func DeleteTask(log *slog.Logger, taskDeleter TaskDeleter) http.HandlerFunc {
 			switch {
 			case errors.Is(err, tasksRepository.ErrTaskNotFound):
 				log.Error("task not found", sl.Err(err))
+				w.WriteHeader(http.StatusNotFound)
 				render.JSON(w, r, response.Error("task not found", req.TaskID.String()))
 			default:
 				log.Error("delete task failed", sl.Err(err))
+				w.WriteHeader(http.StatusInternalServerError)
 				render.JSON(w, r, response.Error("delete task failed", req.TaskID.String()))
 			}
 
