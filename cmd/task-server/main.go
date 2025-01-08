@@ -51,12 +51,12 @@ func main() {
 
 	router := chi.NewRouter()
 
-	router.Use(logger.New(logg))
-	router.Use(middleware.RequestID)
 	router.Use(middleware.Recoverer)
+	router.Use(middleware.RequestID)
 
 	router.Route("/{userID}", func(r chi.Router) {
 		r.Use(validate.ValidateUser(logg, db))
+		router.Use(logger.New(logg))
 
 		r.Post("/task", tasksUsecase.CreateNewTask(logg, db))
 		r.Get("/task", tasksUsecase.GetTask(logg, db))
