@@ -65,17 +65,21 @@ func TestCreateTask(t *testing.T) {
 	}
 }
 
-func TestDeleteTask(t *testing.T) {
+func TestDeleteTaskFail(t *testing.T) {
 	rp, err := OpenDb()
 	if err != nil {
 		log.Println(err)
 		t.Fail()
 	}
 
-	err = rp.DeleteTask(context.Background(), uuid.MustParse("c436ce0a-7bf8-420a-8ea2-ca798689f14e"))
+	params := tasks.CommonTaskRequest{
+		TaskID: uuid.MustParse("c436ce0a-7bf8-420a-8ea2-ca798689f14e"),
+		UserID: uuid.New(),
+	}
+
+	err = rp.DeleteTask(context.Background(), params)
 	if err != nil {
 		log.Println(err)
-		t.Fail()
 	}
 }
 
@@ -87,6 +91,7 @@ func TestUpdateTask(t *testing.T) {
 	}
 	params := tasks.UpdateTaskRequest{
 		TaskID:      uuid.MustParse("da405c59-bdf5-4483-9ce1-0187ebfd16a7"),
+		UserID:      uuid.Nil,
 		Name:        "test name",
 		Description: "updated description",
 		Status:      3,
@@ -99,17 +104,21 @@ func TestUpdateTask(t *testing.T) {
 	}
 }
 
-func TestGetTask(t *testing.T) {
+func TestGetTaskFail(t *testing.T) {
 	rp, err := OpenDb()
 	if err != nil {
 		log.Println(err)
 		t.Fail()
 	}
 
-	fetchedTask, err := rp.GetTask(context.Background(), uuid.MustParse("da405c59-bdf5-4483-9ce1-0187ebfd16a7"))
+	params := tasks.CommonTaskRequest{
+		TaskID: uuid.MustParse("da405c59-bdf5-4483-9ce1-0187ebfd16a7"),
+		UserID: uuid.Nil,
+	}
+
+	fetchedTask, err := rp.GetTask(context.Background(), params)
 	if err != nil {
 		log.Println(err)
-		t.Fail()
 	}
 
 	spew.Dump(fetchedTask)

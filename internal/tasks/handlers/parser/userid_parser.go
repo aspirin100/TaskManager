@@ -1,4 +1,4 @@
-package tasksUsecase
+package parser
 
 import (
 	"log/slog"

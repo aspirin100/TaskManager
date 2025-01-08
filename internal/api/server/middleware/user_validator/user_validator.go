@@ -12,10 +12,12 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/aspirin100/TaskManager/internal/logger/sl"
-	tasksUsecase "github.com/aspirin100/TaskManager/internal/tasks/handlers"
+	"github.com/aspirin100/TaskManager/internal/tasks/handlers/parser"
 	"github.com/aspirin100/TaskManager/internal/tasks/handlers/response"
 	tasksRepository "github.com/aspirin100/TaskManager/internal/tasks/repository"
 )
+
+const CtxUserIDKey = "userID"
 
 type UserChecker interface {
 	CheckUserExists(ctx context.Context, userID uuid.UUID) error
@@ -32,7 +34,7 @@ func ValidateUser(log *slog.Logger, userChecker UserChecker) func(next http.Hand
 		fn := func(w http.ResponseWriter, r *http.Request) {
 			spew.Dump(chi.URLParam(r, "userID"))
 
-			userID, err := tasksUsecase.ParseUserID(log, r)
+			userID, err := parser.ParseUserID(log, r)
 			if err != nil {
 				render.JSON(w, r, response.Error("wrong user id format", response.ErrNilString))
 				return
@@ -52,7 +54,10 @@ func ValidateUser(log *slog.Logger, userChecker UserChecker) func(next http.Hand
 				return
 			}
 
-			next.ServeHTTP(w, r)
+			ctx := r.Context()
+			ctx = context.WithValue(r.Context(), CtxUserIDKey, userID.String())
+
+			next.ServeHTTP(w, r.WithContext(ctx))
 		}
 
 		return http.HandlerFunc(fn)

@@ -11,6 +11,7 @@ import (
 	"github.com/go-chi/render"
 	"github.com/google/uuid"
 
+	validate "github.com/aspirin100/TaskManager/internal/api/server/middleware/user_validator"
 	"github.com/aspirin100/TaskManager/internal/logger/sl"
 	"github.com/aspirin100/TaskManager/internal/tasks"
 	"github.com/aspirin100/TaskManager/internal/tasks/handlers/response"
@@ -30,16 +31,11 @@ func UpdateTask(log *slog.Logger, taskUpdater TaskUpdater) http.HandlerFunc {
 			slog.String("request_id", middleware.GetReqID(r.Context())),
 		)
 
-		_, err := ParseUserID(log, r)
-		if err != nil {
-			render.JSON(w, r, response.Error("wrong user id format", response.ErrNilString))
-
-			return
-		}
+		userID := uuid.MustParse(r.Context().Value(validate.CtxUserIDKey).(string))
 
 		var req tasks.UpdateTaskRequest
 
-		err = render.DecodeJSON(r.Body, &req)
+		err := render.DecodeJSON(r.Body, &req)
 		if err != nil {
 			if errors.Is(err, io.EOF) {
 				log.Error("request body is empty")
@@ -53,6 +49,8 @@ func UpdateTask(log *slog.Logger, taskUpdater TaskUpdater) http.HandlerFunc {
 		}
 
 		log.Info("request body decoded", slog.Any("request", req))
+
+		req.UserID = userID
 
 		taskID, err := taskUpdater.UpdateTask(r.Context(), req)
 		if err != nil {

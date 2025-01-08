@@ -11,18 +11,15 @@ import (
 	"github.com/go-chi/render"
 	"github.com/google/uuid"
 
+	validate "github.com/aspirin100/TaskManager/internal/api/server/middleware/user_validator"
 	"github.com/aspirin100/TaskManager/internal/logger/sl"
 	"github.com/aspirin100/TaskManager/internal/tasks"
 	"github.com/aspirin100/TaskManager/internal/tasks/handlers/response"
 	tasksRepository "github.com/aspirin100/TaskManager/internal/tasks/repository"
 )
 
-type getTaskRequest struct {
-	TaskID uuid.UUID `json:"taskid"`
-}
-
 type TaskReader interface {
-	GetTask(ctx context.Context, taskID uuid.UUID) (tasks.Task, error)
+	GetTask(ctx context.Context, params tasks.CommonTaskRequest) (tasks.Task, error)
 }
 
 func GetTask(log *slog.Logger, taskReader TaskReader) http.HandlerFunc {
@@ -34,16 +31,11 @@ func GetTask(log *slog.Logger, taskReader TaskReader) http.HandlerFunc {
 			slog.String("requestID", middleware.GetReqID(r.Context())),
 		)
 
-		_, err := ParseUserID(log, r)
-		if err != nil {
-			render.JSON(w, r, response.Error("wrong user id format", response.ErrNilString))
+		userID := uuid.MustParse(r.Context().Value(validate.CtxUserIDKey).(string))
 
-			return
-		}
+		var req tasks.CommonTaskRequest
 
-		var req getTaskRequest
-
-		err = render.DecodeJSON(r.Body, &req)
+		err := render.DecodeJSON(r.Body, &req)
 		if err != nil {
 			if errors.Is(err, io.EOF) {
 				log.Error("request body is empty")
@@ -58,7 +50,9 @@ func GetTask(log *slog.Logger, taskReader TaskReader) http.HandlerFunc {
 
 		log.Info("request body decoded", slog.Any("request", req))
 
-		task, err := taskReader.GetTask(r.Context(), req.TaskID)
+		req.UserID = userID
+
+		task, err := taskReader.GetTask(r.Context(), req)
 		if err != nil {
 			switch {
 			case errors.Is(err, tasksRepository.ErrTaskNotFound):

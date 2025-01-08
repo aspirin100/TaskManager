@@ -79,9 +79,9 @@ func (pg *PostgresRepo) CreateTask(ctx context.Context, params tasks.CreateTaskR
 	return taskID, nil
 }
 
-func (pg *PostgresRepo) DeleteTask(ctx context.Context, taskID uuid.UUID) error {
+func (pg *PostgresRepo) DeleteTask(ctx context.Context, params tasks.CommonTaskRequest) error {
 
-	res, err := pg.DB.ExecContext(ctx, DeleteTaskQuery, taskID)
+	res, err := pg.DB.ExecContext(ctx, DeleteTaskQuery, params.TaskID, params.UserID)
 	if err != nil {
 		return fmt.Errorf("delete task query error: %w", err)
 
@@ -107,6 +107,7 @@ func (pg *PostgresRepo) UpdateTask(ctx context.Context, params tasks.UpdateTaskR
 		params.Name,
 		params.Description,
 		params.Status,
+		params.UserID,
 	)
 	if err != nil {
 		return uuid.Nil, fmt.Errorf("update task query error: %w", err)
@@ -124,8 +125,8 @@ func (pg *PostgresRepo) UpdateTask(ctx context.Context, params tasks.UpdateTaskR
 	return params.TaskID, nil
 }
 
-func (pg *PostgresRepo) GetTask(ctx context.Context, taskID uuid.UUID) (tasks.Task, error) {
-	row, err := pg.DB.QueryContext(ctx, GetTaskQuery, taskID)
+func (pg *PostgresRepo) GetTask(ctx context.Context, params tasks.CommonTaskRequest) (tasks.Task, error) {
+	row, err := pg.DB.QueryContext(ctx, GetTaskQuery, params.TaskID, params.UserID)
 	if err != nil {
 		return tasks.Task{}, fmt.Errorf("get task query error: %w", err)
 	}
@@ -174,8 +175,8 @@ func (pg *PostgresRepo) CheckUserExists(ctx context.Context, userID uuid.UUID) e
 
 const (
 	InsertTaskQuery = `insert into tasks(taskID, userID, type, name, description, status) values ($1, $2, $3, $4, $5, $6)`
-	DeleteTaskQuery = `delete from tasks where taskID = $1`
-	UpdateTaskQuery = `update tasks set type = $2, name = $3, description = $4, status = $5 where taskID = $1`
-	GetTaskQuery    = `select * from tasks where taskID = $1`
+	DeleteTaskQuery = `delete from tasks where taskID = $1 and userID = $2`
+	UpdateTaskQuery = `update tasks set type = $2, name = $3, description = $4, status = $5, updatedAt = now() where taskID = $1 and userID = $6`
+	GetTaskQuery    = `select * from tasks where taskID = $1 and userID = $2`
 	CheckUserQuery  = `select * from users where id = $1`
 )

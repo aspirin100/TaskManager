@@ -11,17 +11,15 @@ import (
 	"github.com/go-chi/render"
 	"github.com/google/uuid"
 
+	validate "github.com/aspirin100/TaskManager/internal/api/server/middleware/user_validator"
 	"github.com/aspirin100/TaskManager/internal/logger/sl"
+	"github.com/aspirin100/TaskManager/internal/tasks"
 	"github.com/aspirin100/TaskManager/internal/tasks/handlers/response"
 	tasksRepository "github.com/aspirin100/TaskManager/internal/tasks/repository"
 )
 
-type deleteTaskRequest struct {
-	TaskID uuid.UUID `json:"taskid"`
-}
-
 type TaskDeleter interface {
-	DeleteTask(ctx context.Context, taskID uuid.UUID) error
+	DeleteTask(ctx context.Context, params tasks.CommonTaskRequest) error
 }
 
 func DeleteTask(log *slog.Logger, taskDeleter TaskDeleter) http.HandlerFunc {
@@ -33,16 +31,11 @@ func DeleteTask(log *slog.Logger, taskDeleter TaskDeleter) http.HandlerFunc {
 			slog.String("requestID", middleware.GetReqID(r.Context())),
 		)
 
-		_, err := ParseUserID(log, r)
-		if err != nil {
-			render.JSON(w, r, response.Error("wrong user id format", response.ErrNilString))
+		userID := uuid.MustParse(r.Context().Value(validate.CtxUserIDKey).(string))
 
-			return
-		}
+		var req tasks.CommonTaskRequest
 
-		var req deleteTaskRequest
-
-		err = render.DecodeJSON(r.Body, &req)
+		err := render.DecodeJSON(r.Body, &req)
 		if err != nil {
 			if errors.Is(err, io.EOF) {
 				log.Error("request body is empty")
@@ -57,7 +50,9 @@ func DeleteTask(log *slog.Logger, taskDeleter TaskDeleter) http.HandlerFunc {
 
 		log.Info("request body decoded", slog.Any("request", req))
 
-		err = taskDeleter.DeleteTask(r.Context(), req.TaskID)
+		req.UserID = userID
+
+		err = taskDeleter.DeleteTask(r.Context(), req)
 		if err != nil {
 			switch {
 			case errors.Is(err, tasksRepository.ErrTaskNotFound):
