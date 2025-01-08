@@ -8,6 +8,7 @@ import (
 
 	"github.com/davecgh/go-spew/spew"
 	"github.com/google/uuid"
+	"github.com/stretchr/testify/require"
 
 	"github.com/aspirin100/TaskManager/internal/tasks"
 	tasksRepository "github.com/aspirin100/TaskManager/internal/tasks/repository"
@@ -26,25 +27,6 @@ func OpenDb() (tasksRepository.PostgresRepo, error) {
 	return rp, nil
 }
 
-func TestCreateTaskFail(t *testing.T) {
-
-	rp, err := OpenDb()
-	if err != nil {
-		log.Println(err)
-		t.Fail()
-	}
-
-	params := tasks.CreateTaskRequest{
-		Description: "test description",
-		Status:      1,
-	}
-
-	_, err = rp.CreateTask(context.Background(), params)
-	if err != nil {
-		log.Println(err)
-	}
-}
-
 func TestCreateTask(t *testing.T) {
 	rp, err := OpenDb()
 	if err != nil {
@@ -52,34 +34,86 @@ func TestCreateTask(t *testing.T) {
 		t.Fail()
 	}
 
-	params := tasks.CreateTaskRequest{
-		UserID:      uuid.MustParse("e05fa11d-eec3-4fba-b223-d6516800a047"),
-		Description: "test description",
-		Status:      1,
+	cases := []struct {
+		name        string
+		expectedErr error
+		request     tasks.CreateTaskRequest
+	}{
+		{
+			name:        "ok case",
+			expectedErr: nil,
+			request: tasks.CreateTaskRequest{
+				UserID:      uuid.MustParse("e05fa11d-eec3-4fba-b223-d6516800a047"),
+				Name:        "test-name",
+				Description: "test-descripition",
+			},
+		},
+		{
+			name:        "fail case",
+			expectedErr: tasksRepository.ErrUserNotFound,
+			request: tasks.CreateTaskRequest{
+				UserID:      uuid.Nil,
+				Name:        "test-name",
+				Description: "test-descripition",
+			},
+		},
 	}
 
-	_, err = rp.CreateTask(context.Background(), params)
-	if err != nil {
-		log.Println(err)
-		t.Fail()
+	for _, params := range cases {
+		t.Run(params.name, func(t *testing.T) {
+			_, err = rp.CreateTask(context.Background(), params.request)
+
+			require.EqualValues(t, params.expectedErr, err)
+		})
 	}
+
 }
 
-func TestDeleteTaskFail(t *testing.T) {
+func TestDeleteTask(t *testing.T) {
 	rp, err := OpenDb()
 	if err != nil {
 		log.Println(err)
 		t.Fail()
 	}
 
-	params := tasks.CommonTaskRequest{
-		TaskID: uuid.MustParse("c436ce0a-7bf8-420a-8ea2-ca798689f14e"),
-		UserID: uuid.Nil,
-	}
-
-	err = rp.DeleteTask(context.Background(), params)
+	// creating test task
+	taskID, err := rp.CreateTask(context.Background(), tasks.CreateTaskRequest{
+		UserID: uuid.MustParse("e05fa11d-eec3-4fba-b223-d6516800a047"),
+	})
 	if err != nil {
 		log.Println(err)
+		t.Fail()
+	}
+
+	cases := []struct {
+		name        string
+		expectedErr error
+		request     tasks.CommonTaskRequest
+	}{
+		{
+			name:        "ok case",
+			expectedErr: nil,
+			request: tasks.CommonTaskRequest{
+				UserID: uuid.MustParse("e05fa11d-eec3-4fba-b223-d6516800a047"),
+				TaskID: taskID,
+			},
+		},
+		{
+			name:        "task not found case",
+			expectedErr: tasksRepository.ErrTaskNotFound,
+			request: tasks.CommonTaskRequest{
+				UserID: uuid.MustParse("e05fa11d-eec3-4fba-b223-d6516800a047"),
+				TaskID: uuid.Nil,
+			},
+		},
+	}
+
+	for _, params := range cases {
+		t.Run(params.name, func(t *testing.T) {
+			err = rp.DeleteTask(context.Background(), params.request)
+
+			require.EqualValues(t, params.expectedErr, err)
+		})
 	}
 }
 
