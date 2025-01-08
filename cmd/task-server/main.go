@@ -4,6 +4,7 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -17,9 +18,11 @@ import (
 )
 
 type Config struct {
-	PostgresDSN string `envconfig:"TASK_SERVER_POSTGRES_DSN" default:"postgres://postgres:postgres@localhost:5432/task-manager?sslmode=disable"` //nolint:lll
-	Hostname    string `envconfig:"TASK_SERVER_HOSTNAME" default:":8000"`
-	Environment string `envconfig:"TASK_SERVER_ENV" default:"local"`
+	PostgresDSN string        `envconfig:"TASK_SERVER_POSTGRES_DSN" default:"postgres://postgres:postgres@localhost:5432/task-manager?sslmode=disable"` //nolint:lll
+	Hostname    string        `envconfig:"TASK_SERVER_HOSTNAME" default:":8000"`
+	Timeout     time.Duration `envconfig:"TASK_SERVER_TIMEOUT" default:"5s"`
+	IdleTimeout time.Duration `envconfig:"TASK_SERVER_IDLE_TIMEOUT" default:"60s"`
+	Environment string        `envconfig:"TASK_SERVER_ENV" default:"local"`
 }
 
 const (
@@ -62,8 +65,11 @@ func main() {
 	})
 
 	server := http.Server{
-		Addr:    config.Hostname,
-		Handler: router,
+		Addr:         config.Hostname,
+		Handler:      router,
+		ReadTimeout:  config.Timeout,
+		WriteTimeout: config.Timeout,
+		IdleTimeout:  config.IdleTimeout,
 	}
 
 	err = server.ListenAndServe()
