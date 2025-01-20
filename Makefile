@@ -1,8 +1,9 @@
-.PHONY: build
-build:
+.PHONY: run
+run:
+		docker-compose up -d && \
 		go run ./cmd/task-server/main.go
 
-.DEFAULT_GOAL: build
+.DEFAULT_GOAL: run
 
 .PHONY: cover
 cover:

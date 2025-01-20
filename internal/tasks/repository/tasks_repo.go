@@ -174,9 +174,24 @@ func (pg *PostgresRepo) CheckUserExists(ctx context.Context, userID uuid.UUID) e
 }
 
 const (
-	InsertTaskQuery = `insert into tasks(taskID, userID, type, name, description, status) values ($1, $2, $3, $4, $5, $6)`
-	DeleteTaskQuery = `delete from tasks where taskID = $1 and userID = $2`
-	UpdateTaskQuery = `update tasks set type = $2, name = $3, description = $4, status = $5, updatedAt = now() where taskID = $1 and userID = $6`
-	GetTaskQuery    = `select * from tasks where taskID = $1 and userID = $2`
-	CheckUserQuery  = `select * from users where id = $1`
+	InsertTaskQuery = `
+	insert into tasks(
+	taskID,
+	userID,
+	type,
+	name,
+	description,
+	status) values ($1, $2, $3, $4, $5, $6)`
+	DeleteTaskQuery = `
+	delete from tasks
+	where taskID = $1 and userID = $2`
+	UpdateTaskQuery = `
+	update tasks set type = CASE WHEN $2='' THEN type ELSE $2 END,
+	name = CASE WHEN $3='' THEN name ELSE $3 END,
+	description = CASE WHEN $4='' THEN description ELSE $4 END,
+	status = CASE WHEN $5=0 THEN status ELSE $5 END,
+	updatedAt = now()
+	where taskID = $1 and userID = $6`
+	GetTaskQuery   = `select * from tasks where taskID = $1 and userID = $2`
+	CheckUserQuery = `select * from users where id = $1`
 )
