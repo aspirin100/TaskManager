@@ -14,33 +14,34 @@ import (
 	validate "github.com/aspirin100/TaskManager/internal/api/server/middleware/user_validator"
 	"github.com/aspirin100/TaskManager/internal/logger/sl"
 	"github.com/aspirin100/TaskManager/internal/tasks"
-	"github.com/aspirin100/TaskManager/internal/tasks/handlers/response"
+	"github.com/aspirin100/TaskManager/internal/tasks/service/response"
 	tasksRepository "github.com/aspirin100/TaskManager/internal/tasks/repository"
 )
 
-type TaskCreator interface {
-	CreateTask(ctx context.Context, params tasks.CreateTaskRequest) (uuid.UUID, error)
+type TaskDeleter interface {
+	DeleteTask(ctx context.Context, params tasks.CommonTaskRequest) error
 }
 
-func CreateNewTask(log *slog.Logger, taskCreator TaskCreator) http.HandlerFunc {
+func DeleteTask(log *slog.Logger, taskDeleter TaskDeleter) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		const op = "tasksUsecase.CreateNewTask"
+		const op = "tasksUsecase.DeleteTask"
 
 		log := log.With(
 			slog.String("op", op),
-			slog.String("request_id", middleware.GetReqID(r.Context())),
+			slog.String("requestID", middleware.GetReqID(r.Context())),
 		)
 
 		userID := uuid.MustParse(r.Context().Value(validate.CtxUserIDKey).(string))
 
-		var req tasks.CreateTaskRequest
+		var req tasks.CommonTaskRequest
 
 		err := render.DecodeJSON(r.Body, &req)
 		if err != nil {
-			if errors.Is(err, io.EOF) {
+			switch {
+			case errors.Is(err, io.EOF):
 				log.Error("request body is empty")
 				render.JSON(w, r, response.Error("empty request", response.ErrNilString))
-			} else {
+			default:
 				log.Error("failed to decode request body", sl.Err(err))
 				render.JSON(w, r, response.Error("failed to decode request", response.ErrNilString))
 			}
@@ -53,24 +54,22 @@ func CreateNewTask(log *slog.Logger, taskCreator TaskCreator) http.HandlerFunc {
 
 		req.UserID = userID
 
-		taskID, err := taskCreator.CreateTask(r.Context(), req)
+		err = taskDeleter.DeleteTask(r.Context(), req)
 		if err != nil {
 			switch {
-			case errors.Is(err, tasksRepository.ErrUserNotFound):
-				log.Error("user not found", sl.Err(err))
+			case errors.Is(err, tasksRepository.ErrTaskNotFound):
+				log.Error("task not found", sl.Err(err))
 				w.WriteHeader(http.StatusNotFound)
-				render.JSON(w, r, response.Error("user not found", response.ErrNilString))
+				render.JSON(w, r, response.Error("task not found", req.TaskID.String()))
 			default:
-				log.Error("create task failed", sl.Err(err))
+				log.Error("delete task failed", sl.Err(err))
 				w.WriteHeader(http.StatusInternalServerError)
-				render.JSON(w, r, response.Error("create task failed", response.ErrNilString))
+				render.JSON(w, r, response.Error("delete task failed", req.TaskID.String()))
 			}
 
 			return
 		}
 
-		log.Info("task created:", slog.String("taskID", taskID.String()))
-
-		response.ResponseOK(w, r, taskID.String())
+		response.ResponseOK(w, r, req.TaskID.String())
 	}
 }

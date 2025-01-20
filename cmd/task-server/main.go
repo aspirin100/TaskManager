@@ -12,8 +12,8 @@ import (
 	validate "github.com/aspirin100/TaskManager/internal/api/server/middleware/user_validator"
 	"github.com/aspirin100/TaskManager/internal/config"
 	"github.com/aspirin100/TaskManager/internal/logger/sl"
-	tasksService "github.com/aspirin100/TaskManager/internal/tasks/handlers"
 	tasksRepository "github.com/aspirin100/TaskManager/internal/tasks/repository"
+	tasksService "github.com/aspirin100/TaskManager/internal/tasks/service"
 )
 
 const (

@@ -12,12 +12,14 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/aspirin100/TaskManager/internal/logger/sl"
-	"github.com/aspirin100/TaskManager/internal/tasks/handlers/parser"
-	"github.com/aspirin100/TaskManager/internal/tasks/handlers/response"
 	tasksRepository "github.com/aspirin100/TaskManager/internal/tasks/repository"
+	"github.com/aspirin100/TaskManager/internal/tasks/service/parser"
+	"github.com/aspirin100/TaskManager/internal/tasks/service/response"
 )
 
-const CtxUserIDKey = "userID"
+type ctxKey struct{}
+
+var CtxUserIDKey ctxKey
 
 type UserChecker interface {
 	CheckUserExists(ctx context.Context, userID uuid.UUID) error
@@ -54,8 +56,7 @@ func ValidateUser(log *slog.Logger, userChecker UserChecker) func(next http.Hand
 				return
 			}
 
-			ctx := r.Context()
-			ctx = context.WithValue(r.Context(), CtxUserIDKey, userID.String())
+			ctx := context.WithValue(r.Context(), CtxUserIDKey, userID.String())
 
 			next.ServeHTTP(w, r.WithContext(ctx))
 		}

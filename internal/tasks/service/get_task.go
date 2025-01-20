@@ -14,26 +14,26 @@ import (
 	validate "github.com/aspirin100/TaskManager/internal/api/server/middleware/user_validator"
 	"github.com/aspirin100/TaskManager/internal/logger/sl"
 	"github.com/aspirin100/TaskManager/internal/tasks"
-	"github.com/aspirin100/TaskManager/internal/tasks/handlers/response"
+	"github.com/aspirin100/TaskManager/internal/tasks/service/response"
 	tasksRepository "github.com/aspirin100/TaskManager/internal/tasks/repository"
 )
 
-type TaskUpdater interface {
-	UpdateTask(ctx context.Context, params tasks.UpdateTaskRequest) (uuid.UUID, error)
+type TaskReader interface {
+	GetTask(ctx context.Context, params tasks.CommonTaskRequest) (tasks.Task, error)
 }
 
-func UpdateTask(log *slog.Logger, taskUpdater TaskUpdater) http.HandlerFunc {
+func GetTask(log *slog.Logger, taskReader TaskReader) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		const op = "tasksUsecase.UpdateTask"
+		const op = "tasksUsecase.GetTask"
 
 		log := log.With(
 			slog.String("op", op),
-			slog.String("request_id", middleware.GetReqID(r.Context())),
+			slog.String("requestID", middleware.GetReqID(r.Context())),
 		)
 
 		userID := uuid.MustParse(r.Context().Value(validate.CtxUserIDKey).(string))
 
-		var req tasks.UpdateTaskRequest
+		var req tasks.CommonTaskRequest
 
 		err := render.DecodeJSON(r.Body, &req)
 		if err != nil {
@@ -53,7 +53,7 @@ func UpdateTask(log *slog.Logger, taskUpdater TaskUpdater) http.HandlerFunc {
 
 		req.UserID = userID
 
-		taskID, err := taskUpdater.UpdateTask(r.Context(), req)
+		task, err := taskReader.GetTask(r.Context(), req)
 		if err != nil {
 			switch {
 			case errors.Is(err, tasksRepository.ErrTaskNotFound):
@@ -61,16 +61,14 @@ func UpdateTask(log *slog.Logger, taskUpdater TaskUpdater) http.HandlerFunc {
 				w.WriteHeader(http.StatusNotFound)
 				render.JSON(w, r, response.Error("task not found", req.TaskID.String()))
 			default:
-				log.Error("update task failed", sl.Err(err))
+				log.Error("get task failed", sl.Err(err))
 				w.WriteHeader(http.StatusInternalServerError)
-				render.JSON(w, r, response.Error("update task failed", req.TaskID.String()))
+				render.JSON(w, r, response.Error("get task failed", req.TaskID.String()))
 			}
 
 			return
 		}
 
-		log.Info("task updated:", slog.String("taskID", taskID.String()))
-
-		response.ResponseOK(w, r, taskID.String())
+		render.JSON(w, r, task)
 	}
 }
